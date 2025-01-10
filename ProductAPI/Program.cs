@@ -3,6 +3,8 @@ using Newtonsoft.Json;
 using ProductAPI.Data;
 using ProductAPI.Interfaces;
 using ProductAPI.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,13 +35,20 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IProductSeeder, ProductSeeder>();
-builder.Services.AddScoped<ProductSeeder>(); 
+builder.Services.AddScoped<ProductSeeder>();
+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ProductAPI", Version = "v1" });
+});
+
 
 var app = builder.Build();
 
-
 using (var scope = app.Services.CreateScope())
 {
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("Entering Seeder...");
     var seeder = scope.ServiceProvider.GetRequiredService<ProductSeeder>();
     await seeder.SeedAsync();
 }
@@ -47,7 +56,10 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ProductAPI v1");
+    });
 }
 
 app.UseCors("AllowAllOrigins");
