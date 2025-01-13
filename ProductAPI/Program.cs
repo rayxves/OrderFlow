@@ -40,7 +40,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ProductAPI", Version = "v1" });
+    c.SwaggerDoc("v1-product", new OpenApiInfo { Title = "ProductAPI", Version = "v1" });
 });
 
 

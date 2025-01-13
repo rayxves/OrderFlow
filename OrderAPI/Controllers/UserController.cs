@@ -59,7 +59,7 @@ namespace OrderAPI.Controllers
                 return BadRequest(ModelState);
             }
 
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == loginDto.UserName);
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName.ToLower() == loginDto.UserName.ToLower());
             if (user == null)
             {
                 return Unauthorized("Invalid username!");
