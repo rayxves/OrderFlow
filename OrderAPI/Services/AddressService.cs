@@ -64,7 +64,12 @@ namespace OrderAPI.Services
 
         public async Task<List<Address>> GetAllAddressByUser(string userId)
         {
-            return await _context.Addresses.Where(a => a.UserId == userId).ToListAsync();
+            var addresses = await _context.Addresses.Where(a => a.UserId == userId).ToListAsync();
+            if (addresses.Count == 0)
+            {
+                throw new InvalidOperationException("No addresses found for this user!");
+            }
+            return addresses;
         }
 
         public async Task<Address> UpdateAddressAsync(int addressId, UpdateAddressDto addressDto)
