@@ -36,6 +36,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IProductSeeder, ProductSeeder>();
 builder.Services.AddScoped<ProductSeeder>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
 builder.Services.AddSwaggerGen(c =>
 {

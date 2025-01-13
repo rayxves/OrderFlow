@@ -16,7 +16,14 @@ namespace ProductAPI.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            
+
+            modelBuilder.Entity<Product>()
+            .HasKey(p => p.Id);
+
+            modelBuilder.Entity<Product>()
+                .Property(p => p.Id)
+                .ValueGeneratedOnAdd();
+
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.Rating)
                 .WithOne()
