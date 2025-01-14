@@ -7,13 +7,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderAPI", "OrderAPI\OrderA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductAPI", "ProductAPI\ProductAPI.csproj", "{A91A51C2-4B5B-455A-87D1-B7CA8A2DD26F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductClient", "ProductClient\ProductClient.csproj", "{BA613BE2-82A3-4FE9-936A-1CDB2651B90E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{85262E50-3B3E-4C0E-BDDC-4A7A7AEBD7BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -24,5 +23,12 @@ Global
 		{A91A51C2-4B5B-455A-87D1-B7CA8A2DD26F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A91A51C2-4B5B-455A-87D1-B7CA8A2DD26F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A91A51C2-4B5B-455A-87D1-B7CA8A2DD26F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA613BE2-82A3-4FE9-936A-1CDB2651B90E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA613BE2-82A3-4FE9-936A-1CDB2651B90E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA613BE2-82A3-4FE9-936A-1CDB2651B90E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA613BE2-82A3-4FE9-936A-1CDB2651B90E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
