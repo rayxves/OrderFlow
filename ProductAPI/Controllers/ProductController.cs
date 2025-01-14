@@ -5,7 +5,7 @@ using ProductAPI.Models;
 
 namespace ProductAPI.Controllers
 {
-    [Route("/product")]
+    [Route("/products")]
     [ApiController]
     public class ProductController : ControllerBase
     {
@@ -20,6 +20,13 @@ namespace ProductAPI.Controllers
         public async Task<ActionResult<List<Product>>> GetProducts()
         {
             var products = await _productService.GetProductsAsync();
+            return Ok(products);
+        }
+
+        [HttpGet("by-name")]
+        public async Task<ActionResult<List<Product>>> GetProductsByName(string name)
+        {
+            var products = await _productService.GetProductsByNameAsync(name);
             return Ok(products);
         }
 

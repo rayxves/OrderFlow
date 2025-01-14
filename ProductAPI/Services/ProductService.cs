@@ -77,6 +77,21 @@ namespace ProductAPI.Services
             return await _context.Products.Include(p => p.Rating).Include(p => p.Inventories).ToListAsync();
         }
 
+        public async Task<List<Product>> GetProductsByNameAsync(string name)
+        {
+            var keywords = name.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            var products = await _context.Products
+                .Where(p => keywords.Any(keyword => p.Title.ToLower().Contains(keyword)))
+                .ToListAsync();
+
+            if (!products.Any())
+            {
+                throw new InvalidOperationException("No products found matching the given keywords.");
+            }
+            return products;
+        }
+
         public async Task<Product> UpdateProductAsync(int id, ProductDto productDto)
         {
             var productToUpdate = await _context.Products.Include(p => p.Rating).Include(p => p.Inventories).FirstOrDefaultAsync(p => p.Id == id);
