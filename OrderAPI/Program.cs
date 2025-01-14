@@ -8,6 +8,10 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using OrderAPI.Models;
 using Microsoft.AspNetCore.Identity;
+using ProductClient.Interfaces;
+using ProductClient.Extensions;
+using ProductClient;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,6 +95,13 @@ builder.Services.AddSwaggerGen(option =>
             new string[]{}
         }
     });
+});
+
+builder.Services.AddProductClient();
+
+builder.Services.AddHttpClient<IProductService, ProductService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:5288"); 
 });
 
 builder.Configuration.AddEnvironmentVariables();
