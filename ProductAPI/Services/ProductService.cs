@@ -77,12 +77,12 @@ namespace ProductAPI.Services
             return await _context.Products.Include(p => p.Rating).Include(p => p.Inventories).ToListAsync();
         }
 
-        public async Task<List<Product>> GetProductsByNameAsync(string name)
+        public async Task<List<Product>> GetProductsByKeywordAsync(string keyword)
         {
-            var keywords = name.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var keywords = keyword.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
             var products = await _context.Products
-                .Where(p => keywords.Any(keyword => p.Title.ToLower().Contains(keyword)))
+                .Where(p => keywords.Any(keyword => p.Title.ToLower().Contains(keyword))).Include(p => p.Rating)
                 .ToListAsync();
 
             if (!products.Any())
@@ -90,6 +90,19 @@ namespace ProductAPI.Services
                 throw new InvalidOperationException("No products found matching the given keywords.");
             }
             return products;
+        }
+
+        public async Task<Product> GetProductsByNameAsync(string name)
+        {
+            var product = await _context.Products.Include(p => p.Rating)
+                .FirstOrDefaultAsync(p => p.Title.ToLower().Contains(name.ToLower()));
+
+            if (product == null)
+            {
+                throw new InvalidOperationException("No products found with the given name.");
+            }
+
+            return product;
         }
 
         public async Task<Product> UpdateProductAsync(int id, ProductDto productDto)

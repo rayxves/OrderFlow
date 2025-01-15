@@ -4,7 +4,8 @@ namespace OrderAPI.Dtos
 {
     public class OrderDto
     {
-        public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        public int AddressId { get; set;}
+        public ICollection<OrderItemDto> OrderItems { get; set; } = new List<OrderItemDto>();
 
     }
 }

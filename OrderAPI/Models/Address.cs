@@ -8,14 +8,28 @@ namespace OrderAPI.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public string UserId { get; set; }
-        public User User { get; set; }
-         public string Street { get; set; } = string.Empty;
-         public string Neighborhood { get; set; } = string.Empty;
-        public string City { get; set; } = string.Empty;
-        public string State { get; set; } = string.Empty;
-        public string PostalCode { get; set; } = string.Empty;
-        public string Country { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "UserId is required")]
+        public string UserId { get; set; }
+
+        public User User { get; set; }
+
+        [Required(ErrorMessage = "Street is required")]
+        public string Street { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Neighborhood is required")]
+        public string Neighborhood { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "City is required")]
+        public string City { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "State is required")]
+        public string State { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "PostalCode is required")]
+        public string PostalCode { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Country is required")]
+        public string Country { get; set; } = string.Empty;
     }
 }

@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Text.Json;
 using ProductClient.Interfaces;
 using ProductClient.Mappers;
@@ -15,24 +16,43 @@ public class ProductService : IProductService
 
     public async Task<List<ProductDto>> GetAllProductsAsync()
     {
-        var response = await _httpClient.GetAsync("/products");
-        response.EnsureSuccessStatusCode();
-        var content = await response.Content.ReadAsStringAsync();
-
-        var products = JsonSerializer.Deserialize<List<Product>>(content);
-
-        return products.Select(p => p.ToProductDto()).ToList();
+        try
+        {
+            var response = await _httpClient.GetAsync("/products");
+            response.EnsureSuccessStatusCode();
+            var products = await response.Content.ReadFromJsonAsync<List<Product>>();
+            return products?.Select(p => p.ToProductDto()).ToList() ?? new List<ProductDto>();
+        }
+        catch (HttpRequestException e)
+        {
+            throw new Exception($"Error fetching products: {e.Message}", e);
+        }
+        catch (JsonException e)
+        {
+            throw new Exception("Error parsing product data", e);
+        }
     }
 
     public async Task<ProductDto> GetProductsByNameAsync(string name)
     {
-        Console.WriteLine(name);
-
-        var response = await _httpClient.GetAsync($"/products/by-name?name={name}");
-        response.EnsureSuccessStatusCode();
-        var content = await response.Content.ReadAsStringAsync();
-        var products = JsonSerializer.Deserialize<Product>(content);
-
-        return products.ToProductDto();
+        try
+        {
+            var response = await _httpClient.GetAsync($"/products/by-name?name={Uri.EscapeDataString(name)}");
+            response.EnsureSuccessStatusCode();
+            var product = await response.Content.ReadFromJsonAsync<Product>();
+            return product?.ToProductDto() ?? throw new Exception("Product not found");
+        }
+        catch (HttpRequestException e)
+        {
+            if (e.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                throw new Exception($"Product with name '{name}' not found", e);
+            }
+            throw new Exception($"Error fetching product '{name}': {e.Message}", e);
+        }
+        catch (JsonException e)
+        {
+            throw new Exception($"Error parsing product data for '{name}'", e);
+        }
     }
-};
+}

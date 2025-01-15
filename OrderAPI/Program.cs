@@ -101,13 +101,18 @@ builder.Services.AddProductClient();
 
 builder.Services.AddHttpClient<IProductService, ProductService>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:5288"); 
+    client.BaseAddress = new Uri("http://localhost:5288");
 });
 
 builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
+builder.Services.AddScoped<IDeliveryService, DeliveryService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IOrderItemService, OrderItemService>();
+builder.Services.AddHttpClient<GoogleAPIService>();
+builder.Services.AddScoped<StripeService>();
 
 var app = builder.Build();
 
