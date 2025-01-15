@@ -23,11 +23,18 @@ namespace ProductAPI.Controllers
             return Ok(products);
         }
 
-        [HttpGet("by-name")]
-        public async Task<ActionResult<List<Product>>> GetProductsByName(string name)
+        [HttpGet("by-key")]
+        public async Task<ActionResult<List<Product>>> GetProductsByKeyword(string key)
         {
-            var products = await _productService.GetProductsByNameAsync(name);
+            var products = await _productService.GetProductsByNameAsync(key);
             return Ok(products);
+        }
+
+        [HttpGet("by-name")]
+        public async Task<ActionResult<Product>> GetProductByName(string name)
+        {
+            var product = await _productService.GetProductsByNameAsync(name);
+            return Ok(product);
         }
 
         [HttpGet("{id}")]

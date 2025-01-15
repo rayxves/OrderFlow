@@ -18,18 +18,21 @@ public class ProductService : IProductService
         var response = await _httpClient.GetAsync("/products");
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
+
         var products = JsonSerializer.Deserialize<List<Product>>(content);
 
         return products.Select(p => p.ToProductDto()).ToList();
     }
 
-    public async Task<List<ProductDto>> GetProductsByNameAsync(string name)
+    public async Task<ProductDto> GetProductsByNameAsync(string name)
     {
-        var response = await _httpClient.GetAsync("/products/by-name");
+        Console.WriteLine(name);
+
+        var response = await _httpClient.GetAsync($"/products/by-name?name={name}");
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
-        var products = JsonSerializer.Deserialize<List<Product>>(content);
-        
-        return products.Select(p => p.ToProductDto()).ToList();
+        var products = JsonSerializer.Deserialize<Product>(content);
+
+        return products.ToProductDto();
     }
 };
