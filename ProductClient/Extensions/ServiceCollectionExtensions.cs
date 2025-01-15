@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using ProductClient.Interfaces;
 
@@ -10,9 +11,11 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddProductClient(this IServiceCollection serviceCollection)
     {
+        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
         serviceCollection.AddTransient<IProductService, ProductService>();
 
         return serviceCollection;
-    } 
+    }
 
 }
