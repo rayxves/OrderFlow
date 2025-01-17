@@ -13,7 +13,7 @@ appsettings.json
 *.vssscc
 docker-compose.yml
 *.env
-Dockerfile*
+
 .DS_Store
 Thumbs.db
 desktop.ini

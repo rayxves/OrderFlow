@@ -4,7 +4,7 @@ using OrderAPI.Models;
 namespace OrderAPI.Interfaces
 {
     public interface IOrderService{
-        Task<Order> CreateOrderAsync(User user, OrderDto orderDto);
+        Task<OrderResponseDto> CreateOrderAsync(User user, OrderDto orderDto);
         Task<Order> GetOrderByIdAsync(int orderId);
         Task<List<Order>> GetAllOrdersByUserAsync(string userId);
         Task<Order> UpdateOrderAsync(int orderId, OrderDto orderDto);

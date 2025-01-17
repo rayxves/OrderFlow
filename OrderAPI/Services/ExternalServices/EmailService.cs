@@ -3,7 +3,7 @@ using System.Net.Mail;
 using Microsoft.Extensions.Options;
 using OrderAPI.Mappers;
 
-namespace MediSchedApi.Services
+namespace OrderAPI.Services
 {
     public class EmailService
     {
@@ -14,19 +14,19 @@ namespace MediSchedApi.Services
             _emailSettings = emailSettings.Value;
         }
 
-     public string GenerateEmailHtml(string userName, string orderId, DateTime orderDate, string paymentStatus, decimal totalAmount, string deliveryStatus, DateTime deliveryDate)
-{
-    string headerColor = paymentStatus == "Aprovado" ? "#2ecc71" : "#e74c3c";
-    string headerText = paymentStatus == "Aprovado" ? "Pagamento Aprovado!" : "Pagamento Recusado!";
-    string bodyMessage = paymentStatus == "Aprovado"
-        ? "Seu pagamento foi aprovado e o pedido está sendo processado."
-        : "Infelizmente, o pagamento do seu pedido foi recusado. Por favor, entre em contato para resolver o problema.";
-    string deliveryInfo = paymentStatus == "Aprovado"
-        ? $@"<p><strong>Status da Entrega:</strong> {deliveryStatus}</p>
+        public string GenerateEmailHtml(string userName, int orderId, DateTime orderDate, string paymentStatus, decimal totalAmount, string deliveryStatus, DateTime deliveryDate)
+        {
+            string headerColor = paymentStatus == "Aprovado" ? "#2ecc71" : "#e74c3c";
+            string headerText = paymentStatus == "Aprovado" ? "Pagamento Aprovado!" : "Pagamento Recusado!";
+            string bodyMessage = paymentStatus == "Aprovado"
+                ? "Seu pagamento foi aprovado e o pedido está sendo processado."
+                : "Infelizmente, o pagamento do seu pedido foi recusado. Por favor, entre em contato para resolver o problema.";
+            string deliveryInfo = paymentStatus == "Aprovado"
+                ? $@"<p><strong>Status da Entrega:</strong> {deliveryStatus}</p>
              <p><strong>Data Estimada de Entrega:</strong> {deliveryDate:dd/MM/yyyy}</p>"
-        : "";
+                : "";
 
-    return $@"<html>
+            return $@"<html>
         <body style='font-family: Arial, sans-serif; line-height: 1.6; background-color: #f9f9f9; margin: 0; padding: 20px;'>
             <div style='max-width: 600px; margin: auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);'>
                 <!-- Cabeçalho -->
@@ -52,7 +52,7 @@ namespace MediSchedApi.Services
             </div>
         </body>
         </html>";
-}
+        }
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {

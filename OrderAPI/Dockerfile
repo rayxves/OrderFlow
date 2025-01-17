@@ -4,6 +4,11 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+
+COPY "./ProductClient/ProductClient.csproj" "ProductClient/"
+RUN dotnet restore "ProductClient/ProductClient.csproj"
+COPY "./ProductClient" "ProductClient/"
+
 COPY "./OrderAPI/OrderAPI.csproj" "OrderAPI/"
 RUN dotnet restore "OrderAPI/OrderAPI.csproj"
 COPY "./OrderAPI" "OrderAPI/"

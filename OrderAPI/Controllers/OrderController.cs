@@ -29,7 +29,7 @@ namespace OrderAPI.Controllers
             var user = await _userManager.FindByIdAsync(userId);
             var order = await _orderService.CreateOrderAsync(user, orderDto);
 
-            return Ok(order.ToNewOrderDto());
+            return Ok(order);
         }
 
         [Authorize]

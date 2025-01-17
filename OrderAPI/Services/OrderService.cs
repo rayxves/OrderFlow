@@ -12,13 +12,15 @@ namespace OrderAPI.Services
         private readonly ApplicationDBContext _context;
         private readonly IOrderItemService _orderItemService;
         private readonly IDeliveryService _deliveryService;
-        public OrderService(ApplicationDBContext context, IOrderItemService orderItemService, IDeliveryService deliveryService)
+        private readonly IPaymentService _paymentService;
+        public OrderService(ApplicationDBContext context, IOrderItemService orderItemService, IDeliveryService deliveryService, IPaymentService paymentService)
         {
             _context = context;
             _orderItemService = orderItemService;
             _deliveryService = deliveryService;
+            _paymentService = paymentService;
         }
-        public async Task<Order> CreateOrderAsync(User user, OrderDto orderDto)
+        public async Task<OrderResponseDto> CreateOrderAsync(User user, OrderDto orderDto)
         {
 
             var order = new Order
@@ -55,11 +57,26 @@ namespace OrderAPI.Services
                 throw new InvalidOperationException("Error creating delivery!");
             }
 
+            var payment = await _paymentService.CreatePaymentAsync(order.Id);
+
+            if (payment == null)
+            {
+                _context.Remove(order);
+                await _context.SaveChangesAsync();
+                throw new InvalidOperationException("Error creating payment!");
+            }
+
             order.Delivery = delivery;
+            order.Payment = payment;
 
             _context.Update(order);
             await _context.SaveChangesAsync();
-            return order;
+            return new OrderResponseDto
+            {
+                OrderId = order.Id,
+                PaymentLink = payment.StripePaymentIntentId,
+                Total = order.Total
+            };
         }
 
         public async Task<Order> DeleteOrderAsync(int orderId)
