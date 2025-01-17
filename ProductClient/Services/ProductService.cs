@@ -55,4 +55,27 @@ public class ProductService : IProductService
             throw new Exception($"Error parsing product data for '{name}'", e);
         }
     }
+
+    public async Task<ProductDto> GetProductsByIdAsync(int id)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"/products/?id={id}");
+            response.EnsureSuccessStatusCode();
+            var product = await response.Content.ReadFromJsonAsync<Product>();
+            return product?.ToProductDto() ?? throw new Exception("Product not found");
+        }
+        catch (HttpRequestException e)
+        {
+            if (e.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                throw new Exception($"Product with name '{id}' not found", e);
+            }
+            throw new Exception($"Error fetching product '{id}': {e.Message}", e);
+        }
+        catch (JsonException e)
+        {
+            throw new Exception($"Error parsing product data for '{id}'", e);
+        }
+    }
 }
