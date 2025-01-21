@@ -37,6 +37,8 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<IProductSeeder, ProductSeeder>();
 builder.Services.AddScoped<ProductSeeder>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<ProductConsumerService>();
 
 builder.Services.AddSwaggerGen(c =>
 {

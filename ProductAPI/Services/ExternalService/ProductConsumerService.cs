@@ -1,3 +1,4 @@
+using System.Net.Security;
 using System.Text;
 using System.Text.Json;
 using ProductAPI.Dtos;
@@ -20,11 +21,16 @@ namespace ProductAPI.Services
 
         public async Task StartConsumingAsync()
         {
+            var rabbitMqUrl = _config["RabbitMQ:Url"];
+            if (string.IsNullOrEmpty(rabbitMqUrl))
+            {
+                throw new InvalidOperationException("RabbitMQ URL is not configured. Please check your appsettings.");
+            }
+
             var factory = new ConnectionFactory
             {
-                HostName = _config["RabbitMQ:Host"],
-                UserName = _config["RabbitMQ:Username"],
-                Password = _config["RabbitMQ:Password"]
+                Uri = new Uri(rabbitMqUrl),
+                Port = 5672  //porta padrão para comunicação sem SSL
             };
 
             var connection = await factory.CreateConnectionAsync();
