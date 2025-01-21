@@ -11,5 +11,8 @@ namespace ProductAPI.Models
         public int Quantity { get; set; }
         public int ProductId { get; set; }  
         public Product Product { get; set; }
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
     }
 }

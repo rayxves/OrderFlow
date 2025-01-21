@@ -12,6 +12,7 @@ using ProductClient.Interfaces;
 using ProductClient.Extensions;
 using ProductClient;
 using OrderAPI.Mappers;
+using Quartz;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -105,6 +106,22 @@ builder.Services.AddHttpClient<IProductService, ProductService>(client =>
     client.BaseAddress = new Uri("http://localhost:5288");
 });
 
+
+builder.Services.AddQuartz(q =>
+{
+    q.UseMicrosoftDependencyInjectionJobFactory();
+
+    var jobKey = new JobKey("QuartzService");
+    q.AddJob<QuartzService>(opts => opts.WithIdentity(jobKey));
+
+    q.AddTrigger(opts => opts
+            .ForJob(jobKey)
+            .WithIdentity("QuartzService-trigger")
+            .StartNow()
+            .WithSimpleSchedule(x => x.WithIntervalInMinutes(1).RepeatForever()));
+});
+
+builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
 builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSingleton<ITokenService, TokenService>();

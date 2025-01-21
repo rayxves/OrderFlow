@@ -3,8 +3,9 @@ using Newtonsoft.Json;
 using ProductAPI.Data;
 using ProductAPI.Interfaces;
 using ProductAPI.Services;
-using Microsoft.Extensions.Logging;
+
 using Microsoft.OpenApi.Models;
+
 
 var builder = WebApplication.CreateBuilder(args);
 

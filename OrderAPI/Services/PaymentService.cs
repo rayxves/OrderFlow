@@ -32,6 +32,7 @@ namespace OrderAPI.Services
         }
         public async Task<Payment> CreatePaymentAsync(int orderId)
         {
+
             var order = await _context.Orders
             .Include(o => o.OrderItems)
             .FirstOrDefaultAsync(o => o.Id == orderId);
@@ -71,9 +72,8 @@ namespace OrderAPI.Services
             return payment;
         }
 
-        public async Task<PaymentSuccessDto> GetPaymentSuccessData(string sessionId)
+        public async Task<PaymentSuccessDto> GetPaymentData(string sessionId)
         {
-
             var payment = await _context.Payments
             .Include(p => p.Order)
                 .ThenInclude(o => o.User)
@@ -82,8 +82,6 @@ namespace OrderAPI.Services
             .Include(p => p.Order)
                 .ThenInclude(o => o.OrderItems)
             .FirstOrDefaultAsync(p => p.StripeSessionId == sessionId);
-
-            Console.WriteLine($"StripeSessionId do banco: {payment.StripeSessionId}");
 
             if (payment.Order == null)
             {
@@ -112,15 +110,14 @@ namespace OrderAPI.Services
             };
         }
 
-        public async Task onPaymentSuccess(User user, Order order)
+        public async Task onPaymentFailure(User user, Order order)
         {
-            Console.WriteLine(user.ToString());
-            Console.WriteLine(order.ToString());
+            Console.WriteLine("entrou aqui");
             var subject = _config["EmailSettings:EmailFrom"];
             var toEmail = user.Email;
-            var paymentStatus = "Approved";
-            var deliveryStatus = "Shipped";
-            Console.WriteLine(order.Total);
+            var paymentStatus = "Failed";
+            var deliveryStatus = "";
+
             var deliveryDate = order.Delivery.DeliveryDate;
 
             if (order.OrderItems == null || !order.OrderItems.Any())
@@ -130,20 +127,42 @@ namespace OrderAPI.Services
             }
 
 
-            var body = _emailService.GenerateEmailHtml(user.UserName, order.Id, order.OrderDate, paymentStatus, order.Total, deliveryStatus, deliveryDate);
-            Console.WriteLine("chamando email");
-            Console.WriteLine(body);
-        
-    
+            var body = _emailService.GenerateEmailHtmlToPayment(user.UserName, order.Id, order.OrderDate, paymentStatus, order.Total, deliveryStatus, deliveryDate);
+
             await _emailService.SendEmailAsync(toEmail, subject, body);
-            Console.WriteLine("deu certo email");
+
+            order.Status = "Payment Rejected";
+            var delivery = order.Delivery;
+            delivery.Status = "Cancelled";
+            var payment = order.Payment;
+            payment.PaymentStatus = "Failed";
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task onPaymentSuccess(User user, Order order)
+        {
+            var subject = _config["EmailSettings:EmailFrom"];
+            var toEmail = user.Email;
+            var paymentStatus = "Approved";
+            var deliveryStatus = "Shipped";
+
+            var deliveryDate = order.Delivery.DeliveryDate;
+
+            if (order.OrderItems == null || !order.OrderItems.Any())
+            {
+                Console.WriteLine("Nenhum item no pedido.");
+                return;
+            }
+
+
+            var body = _emailService.GenerateEmailHtmlToPayment(user.UserName, order.Id, order.OrderDate, paymentStatus, order.Total, deliveryStatus, deliveryDate);
+
+            await _emailService.SendEmailAsync(toEmail, subject, body);
+
 
 
             foreach (var orderItem in order.OrderItems)
             {
-                Console.WriteLine(orderItem.ProductName);
-                Console.WriteLine(orderItem.Quantity);
-                Console.WriteLine(orderItem.Price);
 
                 var product = await _productService.GetProductsByNameAsync(orderItem.ProductName);
                 Console.WriteLine(product);
@@ -173,13 +192,15 @@ namespace OrderAPI.Services
                 order.Status = "Payment Success";
                 var delivery = order.Delivery;
                 delivery.Status = "Shipped";
+                var payment = order.Payment;
+                payment.PaymentStatus = "Approved";
                 await _context.SaveChangesAsync();
-
-                Console.WriteLine($"Enviando mensagem para RabbitMQ: {JsonConvert.SerializeObject(orderMessageDto)}");
 
                 await _rabbitMqService.SendMessageAsync("inventory_update", orderMessageDto);
             }
         }
+
+
 
     }
 }
