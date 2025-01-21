@@ -5,7 +5,7 @@ obj/
 *.userosscache
 *.sln.docstates
 appsettings.json
-!appsettings.Development.json
+appsettings.Development.json
 *.dll
 *.exe
 *.log

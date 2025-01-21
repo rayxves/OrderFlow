@@ -74,7 +74,7 @@ namespace OrderAPI.Services
             return new OrderResponseDto
             {
                 OrderId = order.Id,
-                PaymentLink = payment.StripePaymentIntentId,
+                PaymentLink = payment.PaymentUrl,
                 Total = order.Total
             };
         }

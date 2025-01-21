@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using ProductClient.Interfaces;
 using ProductClient.Extensions;
 using ProductClient;
+using OrderAPI.Mappers;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -113,6 +114,12 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IOrderItemService, OrderItemService>();
 builder.Services.AddHttpClient<GoogleAPIService>();
 builder.Services.AddScoped<StripeService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<RabbitMqService>();
+builder.Services.AddScoped<ProductService>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
 
 var app = builder.Build();
 

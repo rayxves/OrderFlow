@@ -1,6 +1,9 @@
+using System;
 using System.Text;
 using System.Text.Json;
 using RabbitMQ.Client;
+using System.Threading.Tasks;
+using System.Net.Security;
 
 namespace OrderAPI.Services
 {
@@ -15,12 +18,24 @@ namespace OrderAPI.Services
 
         public async Task SendMessageAsync<T>(string queueName, T message)
         {
+            var rabbitMqUrl = _config["RabbitMQ:Url"];
+            Console.WriteLine($"RabbitMQ URL: {rabbitMqUrl}");
+
+            if (string.IsNullOrEmpty(rabbitMqUrl))
+            {
+                Console.WriteLine("No RabbitMQ URL specified");
+                throw new InvalidOperationException("RabbitMQ URL is not configured. Please check your appsettings.");
+            }
+
+            Console.WriteLine("Entrou aqui");
+
             var factory = new ConnectionFactory
             {
-                HostName = _config["RabbitMQ:Host"],
-                UserName = _config["RabbitMQ:Username"],
-                Password = _config["RabbitMQ:Password"]
+                Uri = new Uri(rabbitMqUrl),
+                Port = 5672
             };
+
+            Console.WriteLine("Saíu aqui");
 
             using var connection = await factory.CreateConnectionAsync();
             using var channel = await connection.CreateChannelAsync();

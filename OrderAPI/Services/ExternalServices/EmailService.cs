@@ -16,12 +16,12 @@ namespace OrderAPI.Services
 
         public string GenerateEmailHtml(string userName, int orderId, DateTime orderDate, string paymentStatus, decimal totalAmount, string deliveryStatus, DateTime deliveryDate)
         {
-            string headerColor = paymentStatus == "Aprovado" ? "#2ecc71" : "#e74c3c";
-            string headerText = paymentStatus == "Aprovado" ? "Pagamento Aprovado!" : "Pagamento Recusado!";
-            string bodyMessage = paymentStatus == "Aprovado"
+            string headerColor = paymentStatus == "Approved" ? "#2ecc71" : "#e74c3c";
+            string headerText = paymentStatus == "Approved" ? "Pagamento Aprovado!" : "Pagamento Recusado!";
+            string bodyMessage = paymentStatus == "Approved"
                 ? "Seu pagamento foi aprovado e o pedido está sendo processado."
                 : "Infelizmente, o pagamento do seu pedido foi recusado. Por favor, entre em contato para resolver o problema.";
-            string deliveryInfo = paymentStatus == "Aprovado"
+            string deliveryInfo = paymentStatus == "Approved"
                 ? $@"<p><strong>Status da Entrega:</strong> {deliveryStatus}</p>
              <p><strong>Data Estimada de Entrega:</strong> {deliveryDate:dd/MM/yyyy}</p>"
                 : "";
