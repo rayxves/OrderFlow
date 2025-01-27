@@ -14,13 +14,13 @@ namespace OrderAPI.Services
             _emailSettings = emailSettings.Value;
         }
 
-        public string GenerateEmailHtml(string userName, int orderId, DateTime orderDate, string paymentStatus, decimal totalAmount, string deliveryStatus, DateTime deliveryDate)
+        public string GenerateEmailHtmlToPayment(string userName, int orderId, DateTime orderDate, string paymentStatus, decimal totalAmount, string deliveryStatus, DateTime deliveryDate)
         {
             string headerColor = paymentStatus == "Approved" ? "#2ecc71" : "#e74c3c";
-            string headerText = paymentStatus == "Approved" ? "Pagamento Aprovado!" : "Pagamento Recusado!";
+            string headerText = paymentStatus == "Approved" ? "Pagamento Aprovado!" : "Pagamento Cancelado!";
             string bodyMessage = paymentStatus == "Approved"
                 ? "Seu pagamento foi aprovado e o pedido está sendo processado."
-                : "Infelizmente, o pagamento do seu pedido foi recusado. Por favor, entre em contato para resolver o problema.";
+                : "Infelizmente, o seu pedido foi cancelado. Por favor, se houve algum problema entre em contato conosco para resolver.";
             string deliveryInfo = paymentStatus == "Approved"
                 ? $@"<p><strong>Status da Entrega:</strong> {deliveryStatus}</p>
              <p><strong>Data Estimada de Entrega:</strong> {deliveryDate:dd/MM/yyyy}</p>"
@@ -53,6 +53,44 @@ namespace OrderAPI.Services
         </body>
         </html>";
         }
+        public string GenerateEmailHtmlToDelivery(string userName, int orderId, string deliveryStatus, DateTime deliveryDate)
+        {
+            return $@"
+        <html>
+        <body style='font-family: Arial, sans-serif; line-height: 1.6; background-color: #f9f9f9; margin: 0; padding: 20px;'>
+            <div style='max-width: 600px; margin: auto; background: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);'>
+                <!-- Cabeçalho -->
+                <div style='background-color: #2ecc71; color: #ffffff; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;'>
+                    <h2 style='margin: 0; font-size: 24px;'>Pedido Entregue!</h2>
+                </div>
+                
+                <!-- Corpo do Email -->
+                <div style='padding: 30px;'>
+                    <p><strong>Olá, {userName}!</strong></p>
+                    <p>Temos o prazer de informar que seu pedido foi entregue com sucesso.</p>
+                    <p><strong>ID do Pedido:</strong> {orderId}</p>
+                    <p><strong>Data Estimada da Entrega:</strong> {deliveryDate:dd/MM/yyyy}</p>
+                    <p><strong>Status de Entrega:</strong> {deliveryStatus}</p>
+                    
+                    <br />
+                    <p>Por favor, verifique se todos os itens estão corretos e se a entrega foi feita conforme esperado.</p>
+                    <p>Se houver qualquer problema ou dúvida, não hesite em entrar em contato conosco.</p>
+
+                    <br />
+                    <p style='color: #555555; font-size: 14px;'>Atenciosamente,</p>
+                    <p style='font-weight: bold;'>Equipe OrderAPI</p>
+                </div>
+                
+                <!-- Rodapé -->
+                <div style='background-color: #f4f4f4; color: #777777; padding: 15px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px;'>
+                    <p>© 2025 OrderAPI. Todos os direitos reservados.</p>
+                    <p><a href='#' style='color: #2ecc71; text-decoration: none;'>Visite nosso site</a></p>
+                </div>
+            </div>
+        </body>
+        </html>";
+        }
+
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {

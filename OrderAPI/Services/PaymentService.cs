@@ -112,10 +112,10 @@ namespace OrderAPI.Services
 
         public async Task onPaymentFailure(User user, Order order)
         {
-            Console.WriteLine("entrou aqui");
+
             var subject = _config["EmailSettings:EmailFrom"];
             var toEmail = user.Email;
-            var paymentStatus = "Failed";
+            var paymentStatus = "Cancelled";
             var deliveryStatus = "";
 
             var deliveryDate = order.Delivery.DeliveryDate;
@@ -131,41 +131,28 @@ namespace OrderAPI.Services
 
             await _emailService.SendEmailAsync(toEmail, subject, body);
 
-            order.Status = "Payment Rejected";
+            order.Status = "Payment Cancelled";
             var delivery = order.Delivery;
             delivery.Status = "Cancelled";
             var payment = order.Payment;
-            payment.PaymentStatus = "Failed";
+            payment.PaymentStatus = "Cancelled";
             await _context.SaveChangesAsync();
         }
 
         public async Task onPaymentSuccess(User user, Order order)
         {
-            var subject = _config["EmailSettings:EmailFrom"];
-            var toEmail = user.Email;
-            var paymentStatus = "Approved";
-            var deliveryStatus = "Shipped";
-
-            var deliveryDate = order.Delivery.DeliveryDate;
-
-            if (order.OrderItems == null || !order.OrderItems.Any())
+            var orderMessageDto = new OrderMessageDto
             {
-                Console.WriteLine("Nenhum item no pedido.");
-                return;
-            }
-
-
-            var body = _emailService.GenerateEmailHtmlToPayment(user.UserName, order.Id, order.OrderDate, paymentStatus, order.Total, deliveryStatus, deliveryDate);
-
-            await _emailService.SendEmailAsync(toEmail, subject, body);
-
-
+                OrderId = order.Id,
+                UserId = order.UserId,
+                Total = order.Total,
+                OrderDate = order.OrderDate,
+                OrderItems = new List<OrderItemMessageDto>()
+            };
 
             foreach (var orderItem in order.OrderItems)
             {
-
                 var product = await _productService.GetProductsByNameAsync(orderItem.ProductName);
-                Console.WriteLine(product);
 
                 if (product == null)
                 {
@@ -173,21 +160,24 @@ namespace OrderAPI.Services
                     continue;
                 }
 
-                var orderMessageDto = new OrderMessageDto
-                {
-                    OrderId = order.Id,
-                    UserId = order.UserId,
-                    Total = order.Total,
-                    OrderDate = order.OrderDate,
-                    OrderItems = new List<OrderItemMessageDto>
-            {
-                new OrderItemMessageDto
+
+                var orderItemMessageDto = new OrderItemMessageDto
                 {
                     ProductId = product.Id,
                     Quantity = orderItem.Quantity
-                }
-            }
                 };
+
+
+                orderMessageDto.OrderItems.Add(orderItemMessageDto);
+            }
+
+            try
+            {
+                if (orderMessageDto.OrderItems.Any())
+                {
+                    await _rabbitMqService.SendMessageAsync("inventory_update", orderMessageDto);
+                }
+
 
                 order.Status = "Payment Success";
                 var delivery = order.Delivery;
@@ -196,11 +186,35 @@ namespace OrderAPI.Services
                 payment.PaymentStatus = "Approved";
                 await _context.SaveChangesAsync();
 
-                await _rabbitMqService.SendMessageAsync("inventory_update", orderMessageDto);
+                var subject = _config["EmailSettings:EmailFrom"];
+                var toEmail = user.Email;
+                var paymentStatus = "Approved";
+                var deliveryStatus = "Shipped";
+
+                var deliveryDate = order.Delivery.DeliveryDate;
+
+                if (order.OrderItems == null || !order.OrderItems.Any())
+                {
+                    Console.WriteLine("Nenhum item no pedido.");
+                    return;
+                }
+
+                var body = _emailService.GenerateEmailHtmlToPayment(user.UserName, order.Id, order.OrderDate, paymentStatus, order.Total, deliveryStatus, deliveryDate);
+
+                await _emailService.SendEmailAsync(toEmail, subject, body);
+            }
+            catch (Exception ex)
+            {
+
+                var payment = order.Payment;
+                payment.PaymentStatus = "Failed";
+                order.Status = "Payment Failed";
+                var delivery = order.Delivery;
+                delivery.Status = "Cancelled";
+                await _context.SaveChangesAsync();
+                throw new ArgumentException("Error trying to update inventory: " + ex.Message);
             }
         }
-
-
 
     }
 }

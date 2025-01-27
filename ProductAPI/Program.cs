@@ -4,6 +4,7 @@ using ProductAPI.Data;
 using ProductAPI.Interfaces;
 using ProductAPI.Services;
 
+
 using Microsoft.OpenApi.Models;
 
 
@@ -31,6 +32,12 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5988);
+});
+
+
 builder.Services.AddControllers();
 builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddEndpointsApiExplorer();
@@ -40,6 +47,7 @@ builder.Services.AddScoped<ProductSeeder>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<ProductConsumerService>();
+builder.Services.AddHostedService<ProductConsumerHostedService>();
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -48,6 +56,9 @@ builder.Services.AddSwaggerGen(c =>
 
 
 var app = builder.Build();
+
+
+
 
 using (var scope = app.Services.CreateScope())
 {
@@ -70,4 +81,4 @@ app.UseCors("AllowAllOrigins");
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

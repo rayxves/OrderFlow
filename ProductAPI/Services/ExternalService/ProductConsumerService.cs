@@ -21,6 +21,8 @@ namespace ProductAPI.Services
 
         public async Task StartConsumingAsync()
         {
+            bool allItemsUpdatedSuccessfully = true;
+
             var rabbitMqUrl = _config["RabbitMQ:Url"];
             if (string.IsNullOrEmpty(rabbitMqUrl))
             {
@@ -35,7 +37,7 @@ namespace ProductAPI.Services
 
             var connection = await factory.CreateConnectionAsync();
             var channel = await connection.CreateChannelAsync();
-
+            Console.WriteLine("Connected to RabbitMQ");
             await channel.QueueDeclareAsync(queue: "inventory_update",
                 durable: true,
                 exclusive: false,
@@ -48,13 +50,25 @@ namespace ProductAPI.Services
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
+                Console.WriteLine($" [x] Received {Encoding.UTF8.GetString(body)}");
 
                 try
-                {
-                    var productUpdateMessage = JsonSerializer.Deserialize<ProductUpdateMessage>(message);
 
-                    var inventory = await _inventoryService.UpdateInventoryAsync(productUpdateMessage.ProductId, productUpdateMessage.Quantity);
-                    Console.WriteLine($"Updated Inventory: {inventory.ProductId} - {inventory.Quantity}");
+                {
+                    var orderResponse = JsonSerializer.Deserialize<OrderResponse>(message);
+
+                    foreach (var item in orderResponse.OrderItems)
+                    {
+                        Console.WriteLine(item.ProductId);
+                        Console.WriteLine(item.Quantity);
+                        var inventory = await _inventoryService.UpdateInventoryAsync(item.ProductId, item.Quantity);
+                        if (inventory == null)
+                        {
+                            allItemsUpdatedSuccessfully = false;
+                            throw new InvalidOperationException("Erro ao atualizar o inventário. Pagamento não confirmado.");
+                        }
+
+                    }
 
                     await channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false);
                 }
@@ -66,6 +80,9 @@ namespace ProductAPI.Services
             };
 
             await channel.BasicConsumeAsync(queue: "inventory_update", consumer: consumer, autoAck: false);
+            await Task.Delay(Timeout.Infinite);
         }
+
+
     }
 }

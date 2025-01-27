@@ -16,7 +16,8 @@ namespace ProductAPI.Services
         public async Task<Inventory> AddToInventoryAsync(int productId, int quantity)
         {
             var existsInventory = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == productId);
-            if (existsInventory == null){
+            if (existsInventory == null)
+            {
                 throw new InvalidOperationException("Inventory does not exist");
             }
 
@@ -28,12 +29,16 @@ namespace ProductAPI.Services
 
         public async Task<Inventory> UpdateInventoryAsync(int productId, int quantity)
         {
+            Console.WriteLine($"Trying to update inventory for ProductId {productId} with quantity {quantity}");
+
 
             var existsInventory = await _context.Inventories.FirstOrDefaultAsync(x => x.ProductId == productId);
             if (existsInventory == null)
             {
                 throw new InvalidOperationException("Inventory not found!");
             }
+            Console.WriteLine($"Current Inventory for ProductId {productId}: {existsInventory.Quantity}");
+
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -45,6 +50,11 @@ namespace ProductAPI.Services
                 }
 
                 existsInventory.Quantity -= quantity;
+                if (existsInventory.Quantity < 0)
+                {
+                    throw new InvalidOperationException("Inventory cannot go negative.");
+                }
+
                 _context.Inventories.Update(existsInventory);
 
                 try
@@ -55,6 +65,9 @@ namespace ProductAPI.Services
                 {
                     throw new InvalidOperationException("The inventory was updated by another process. Please try again.");
                 }
+
+                Console.WriteLine($"Updated Inventory for ProductId {productId}: {existsInventory.Quantity}");
+
 
                 await transaction.CommitAsync();
                 return existsInventory;
