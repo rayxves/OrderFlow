@@ -103,7 +103,7 @@ builder.Services.AddProductClient();
 
 builder.Services.AddHttpClient<IProductService, ProductService>(client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5288");
+    client.BaseAddress = new Uri("http://localhost:5988");
 });
 
 

@@ -75,6 +75,27 @@ namespace OrderAPI.Services
 
         }
 
+        public async Task<List<Delivery>> GetDeliveriesByDateAndOrderSuccess(DateTime date)
+        {
+            date = date.ToUniversalTime();
+            return await _context.Deliveries.Include(d => d.Order).Include(d => d.Address).ThenInclude(a => a.User).Where(d => d.DeliveryDate <= date && d.Order.Status == "Payment Success").ToListAsync();
+        }
+
+        public async Task<List<Delivery>> GetDeliveriesByUserAndStatusAsync(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
+            }
+
+            var deliveries = await _context.Deliveries.Where(d => d.Address.UserId == userId && d.Order.Status == "Payment Success").ToListAsync();
+            if (!deliveries.Any())
+            {
+                throw new InvalidOperationException("No deliveries found for this user!");
+            }
+            return deliveries;
+        }
+
         public async Task<List<Delivery>> GetDeliveriesByUserAsync(string userId)
         {
             if (string.IsNullOrEmpty(userId))
@@ -82,7 +103,7 @@ namespace OrderAPI.Services
                 throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
             }
 
-            var deliveries = await _context.Deliveries.Where(d => d.Address.UserId == userId).ToListAsync();
+            var deliveries = await _context.Deliveries.Include(d => d.Address).Include(d => d.Order).Where(d => d.Address.UserId == userId).ToListAsync();
             if (!deliveries.Any())
             {
                 throw new InvalidOperationException("No deliveries found for this user!");

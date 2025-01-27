@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.DataProtection;
+
 using Microsoft.AspNetCore.Mvc;
 using OrderAPI.Interfaces;
 using Stripe;
@@ -31,31 +31,44 @@ namespace OrderAPI.Controllers
             {
                 StripeConfiguration.ApiKey = _config["Stripe:ApiKey"];
                 var service = new SessionService();
-
                 var session = await service.GetAsync(session_id);
 
-                if (session != null && session.PaymentStatus == "paid")
+                if (session != null)
                 {
-                    var paymentIntentService = new PaymentIntentService();
-                    var paymentIntent = paymentIntentService.Get(session.PaymentIntentId);
-
-                    var paymentDto = await _paymentsService.GetPaymentSuccessData(session.Id);
-
-                    if (paymentDto != null)
+                    if (session.PaymentStatus == "paid")
                     {
-                        Console.WriteLine(paymentDto.User.ToString());
-                        Console.WriteLine(paymentDto.Order.ToString());
-                        await _paymentsService.onPaymentSuccess(paymentDto.User, paymentDto.Order);
-                        Console.WriteLine($"Pagamento bem-sucedido para a sessão: {session.Id}");
-                        return Ok("Pagamento processado com sucesso!");
+                        var paymentIntentService = new PaymentIntentService();
+                        var paymentIntent = paymentIntentService.Get(session.PaymentIntentId);
+
+                        var paymentDto = await _paymentsService.GetPaymentData(session.Id);
+
+                        if (paymentDto != null)
+                        {
+                            await _paymentsService.onPaymentSuccess(paymentDto.User, paymentDto.Order);
+                            return Ok("Pagamento processado com sucesso!");
+                        }
+                        else
+                        {
+                            return BadRequest("Erro ao processar o pagamento.");
+                        }
+                    }
+                    else if (session.PaymentStatus == "unpaid" || session.PaymentStatus == "requires_payment_method")
+                    {
+                        var paymentFail = await _paymentsService.GetPaymentData(session.Id);
+                        await _paymentsService.onPaymentFailure(paymentFail.User, paymentFail.Order);
+                        return BadRequest("Pagamento falhou ou cartão recusado.");
+                    }
+                    else if (session.PaymentStatus == "requires_action")
+                    {
+                        return BadRequest("Ação adicional necessária para completar o pagamento.");
                     }
                     else
                     {
-                        return BadRequest("Erro ao processar o pagamento.");
+                        return BadRequest("Status de pagamento desconhecido.");
                     }
                 }
 
-                return BadRequest("Sessão de pagamento não foi concluída com sucesso.");
+                return BadRequest("Sessão de pagamento não encontrada.");
             }
             catch (Exception ex)
             {
@@ -63,5 +76,6 @@ namespace OrderAPI.Controllers
                 return StatusCode(500, "Erro interno ao processar o pagamento.");
             }
         }
+
     }
 }

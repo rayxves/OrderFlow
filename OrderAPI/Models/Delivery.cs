@@ -12,11 +12,16 @@ namespace OrderAPI.Models
         public int OrderId { get; set; }
         public Order Order { get; set; }
 
-        public string Status { get; set; } = "Pending";  
-        public DateTime DeliveryDate { get; set; }
+        public string Status { get; set; } = "Pending";
+        private DateTime _deliveryDate;
+        public DateTime DeliveryDate
+        {
+            get => _deliveryDate;
+            set => _deliveryDate = DateTime.SpecifyKind(value, DateTimeKind.Utc);
+        }
 
         public int AddressId { get; set; }
         public Address Address { get; set; }
-        
+
     }
 }
