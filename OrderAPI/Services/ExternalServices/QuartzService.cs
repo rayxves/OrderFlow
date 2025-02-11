@@ -36,32 +36,38 @@ namespace OrderAPI.Services
 
             foreach (var delivery in deliveries)
             {
-                delivery.Status = "Delivered";
-                _context.Update(delivery);
-
-                var orderId = delivery.OrderId;
-                var user = delivery.Address.User;
-                if (user == null)
+                if (delivery.Status != "Delivered")
                 {
-                    _logger.LogError($"User not found for delivery with orderId {orderId}");
-                    continue;
+                    delivery.Status = "Delivered";
+                    _context.Update(delivery);
+                    await _context.SaveChangesAsync();
+
+
+                    var orderId = delivery.OrderId;
+                    var user = delivery.Address.User;
+                    if (user == null)
+                    {
+                        _logger.LogError($"User not found for delivery with orderId {orderId}");
+                        continue;
+                    }
+
+
+                    var body = _emailService.GenerateEmailHtmlToDelivery(user.UserName, orderId, "Delivered", delivery.DeliveryDate);
+                    var subject = _config["EmailSettings:EmailFrom"] ?? "Delivery Notification";
+                    var toEmail = user.Email;
+
+                    emailTasks.Add(Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await _emailService.SendEmailAsync(toEmail, subject, body);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError($"Error sending delivery email to {toEmail}: {ex.Message}");
+                        }
+                    }));
                 }
-
-                var body = _emailService.GenerateEmailHtmlToDelivery(user.UserName, orderId, "Delivered", delivery.DeliveryDate);
-                var subject = _config["EmailSettings:EmailFrom"] ?? "Delivery Notification";
-                var toEmail = user.Email;
-
-                emailTasks.Add(Task.Run(async () =>
-                {
-                    try
-                    {
-                        await _emailService.SendEmailAsync(toEmail, subject, body);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"Error sending delivery email to {toEmail}: {ex.Message}");
-                    }
-                }));
             }
 
             await Task.WhenAll(emailTasks);

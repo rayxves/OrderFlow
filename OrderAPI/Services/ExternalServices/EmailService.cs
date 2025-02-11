@@ -14,13 +14,13 @@ namespace OrderAPI.Services
             _emailSettings = emailSettings.Value;
         }
 
-        public string GenerateEmailHtmlToPayment(string userName, int orderId, DateTime orderDate, string paymentStatus, decimal totalAmount, string deliveryStatus, DateTime deliveryDate)
+        public string GenerateEmailHtmlToPayment(string userName, int orderId, DateTime orderDate, string paymentStatus, decimal totalAmount, string deliveryStatus, DateTime deliveryDate, string orderCancelationReason)
         {
             string headerColor = paymentStatus == "Approved" ? "#2ecc71" : "#e74c3c";
             string headerText = paymentStatus == "Approved" ? "Pagamento Aprovado!" : "Pagamento Cancelado!";
             string bodyMessage = paymentStatus == "Approved"
                 ? "Seu pagamento foi aprovado e o pedido está sendo processado."
-                : "Infelizmente, o seu pedido foi cancelado. Por favor, se houve algum problema entre em contato conosco para resolver.";
+                : $@"Infelizmente, o seu pedido foi cancelado. {orderCancelationReason}";
             string deliveryInfo = paymentStatus == "Approved"
                 ? $@"<p><strong>Status da Entrega:</strong> {deliveryStatus}</p>
              <p><strong>Data Estimada de Entrega:</strong> {deliveryDate:dd/MM/yyyy}</p>"

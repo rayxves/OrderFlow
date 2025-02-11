@@ -7,6 +7,7 @@ using OrderAPI.Interfaces;
 using OrderAPI.Models;
 
 using ProductClient.Interfaces;
+using ProductClient.Models;
 using Stripe.Checkout;
 
 namespace OrderAPI.Services
@@ -41,6 +42,8 @@ namespace OrderAPI.Services
             {
                 throw new InvalidOperationException("Order not found!");
             }
+
+
 
             var lineItems = order.OrderItems.Select(item => new SessionLineItemOptions
             {
@@ -110,9 +113,9 @@ namespace OrderAPI.Services
             };
         }
 
-        public async Task onPaymentFailure(User user, Order order)
+        public async Task onPaymentFailure(User user, Order order, string orderCancelationReason)
         {
-
+            Console.WriteLine("processando erro");
             var subject = _config["EmailSettings:EmailFrom"];
             var toEmail = user.Email;
             var paymentStatus = "Cancelled";
@@ -127,7 +130,7 @@ namespace OrderAPI.Services
             }
 
 
-            var body = _emailService.GenerateEmailHtmlToPayment(user.UserName, order.Id, order.OrderDate, paymentStatus, order.Total, deliveryStatus, deliveryDate);
+            var body = _emailService.GenerateEmailHtmlToPayment(user.UserName, order.Id, order.OrderDate, paymentStatus, order.Total, deliveryStatus, deliveryDate, orderCancelationReason);
 
             await _emailService.SendEmailAsync(toEmail, subject, body);
 
@@ -171,49 +174,61 @@ namespace OrderAPI.Services
                 orderMessageDto.OrderItems.Add(orderItemMessageDto);
             }
 
-            try
+
+            if (orderMessageDto.OrderItems.Any())
             {
-                if (orderMessageDto.OrderItems.Any())
+                try
                 {
-                    await _rabbitMqService.SendMessageAsync("inventory_update", orderMessageDto);
+
+                    var inventoryUpdated = await _rabbitMqService.SendMessageAsync("inventory_update", orderMessageDto);
+                    Console.WriteLine($"Inventory updated: {inventoryUpdated}");
+                    if (!inventoryUpdated)
+                    {
+
+                        var failureError = "Estoque vazio/esgotado.";
+                        await onPaymentFailure(user, order, failureError);
+                        throw new InvalidOperationException(failureError);
+                    }
+                    else
+                    {
+
+                        order.Status = "Payment Success";
+                        var delivery = order.Delivery;
+                        delivery.Status = "Shipped";
+                        var payment = order.Payment;
+                        payment.PaymentStatus = "Approved";
+                        await _context.SaveChangesAsync();
+
+                        var subject = _config["EmailSettings:EmailFrom"];
+                        var toEmail = user.Email;
+                        var paymentStatus = "Approved";
+                        var deliveryStatus = "Shipped";
+
+                        var deliveryDate = order.Delivery.DeliveryDate;
+
+                        if (order.OrderItems == null || !order.OrderItems.Any())
+                        {
+                            Console.WriteLine("Nenhum item no pedido.");
+                            return;
+                        }
+
+                        var body = _emailService.GenerateEmailHtmlToPayment(user.UserName, order.Id, order.OrderDate, paymentStatus, order.Total, deliveryStatus, deliveryDate, "");
+
+                        await _emailService.SendEmailAsync(toEmail, subject, body);
+
+
+                    }
                 }
-
-
-                order.Status = "Payment Success";
-                var delivery = order.Delivery;
-                delivery.Status = "Shipped";
-                var payment = order.Payment;
-                payment.PaymentStatus = "Approved";
-                await _context.SaveChangesAsync();
-
-                var subject = _config["EmailSettings:EmailFrom"];
-                var toEmail = user.Email;
-                var paymentStatus = "Approved";
-                var deliveryStatus = "Shipped";
-
-                var deliveryDate = order.Delivery.DeliveryDate;
-
-                if (order.OrderItems == null || !order.OrderItems.Any())
+                catch (System.Exception ex)
                 {
-                    Console.WriteLine("Nenhum item no pedido.");
-                    return;
+                    await onPaymentFailure(user, order, "Erro durante a atualização do estoque.");
+                    throw new ArgumentException("Error trying to update inventory: " + ex.Message);
+
                 }
-
-                var body = _emailService.GenerateEmailHtmlToPayment(user.UserName, order.Id, order.OrderDate, paymentStatus, order.Total, deliveryStatus, deliveryDate);
-
-                await _emailService.SendEmailAsync(toEmail, subject, body);
             }
-            catch (Exception ex)
-            {
 
-                var payment = order.Payment;
-                payment.PaymentStatus = "Failed";
-                order.Status = "Payment Failed";
-                var delivery = order.Delivery;
-                delivery.Status = "Cancelled";
-                await _context.SaveChangesAsync();
-                throw new ArgumentException("Error trying to update inventory: " + ex.Message);
-            }
+
+
         }
 
     }

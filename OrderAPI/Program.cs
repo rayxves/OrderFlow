@@ -111,14 +111,11 @@ builder.Services.AddQuartz(q =>
 {
     q.UseMicrosoftDependencyInjectionJobFactory();
 
-    var jobKey = new JobKey("QuartzService");
-    q.AddJob<QuartzService>(opts => opts.WithIdentity(jobKey));
-
+    q.AddJob<QuartzService>(opts => opts.WithIdentity("delivery-job"));
     q.AddTrigger(opts => opts
-            .ForJob(jobKey)
-            .WithIdentity("QuartzService-trigger")
-            .StartNow()
-            .WithSimpleSchedule(x => x.WithIntervalInMinutes(1).RepeatForever()));
+        .ForJob("delivery-job")
+        .WithCronSchedule("0 0 0 * * ?"));
+
 });
 
 builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
@@ -133,12 +130,12 @@ builder.Services.AddHttpClient<GoogleAPIService>();
 builder.Services.AddScoped<StripeService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<RabbitMqService>();
+builder.Services.AddSingleton<RabbitMqService>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
-
 var app = builder.Build();
+
 
 if (app.Environment.IsDevelopment())
 {

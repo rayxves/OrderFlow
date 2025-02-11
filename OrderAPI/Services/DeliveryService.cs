@@ -78,7 +78,7 @@ namespace OrderAPI.Services
         public async Task<List<Delivery>> GetDeliveriesByDateAndOrderSuccess(DateTime date)
         {
             date = date.ToUniversalTime();
-            return await _context.Deliveries.Include(d => d.Order).Include(d => d.Address).ThenInclude(a => a.User).Where(d => d.DeliveryDate <= date && d.Order.Status == "Payment Success").ToListAsync();
+            return await _context.Deliveries.Include(d => d.Order).Include(d => d.Address).ThenInclude(a => a.User).Where(d => d.DeliveryDate <= date && d.Order.Status == "Payment Success" && d.Status == "Shipped").ToListAsync();
         }
 
         public async Task<List<Delivery>> GetDeliveriesByUserAndStatusAsync(string userId)

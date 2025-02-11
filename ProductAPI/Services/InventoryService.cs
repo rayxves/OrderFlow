@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ProductAPI.Data;
+using ProductAPI.Dtos;
 using ProductAPI.Interfaces;
 using ProductAPI.Models;
 
@@ -13,69 +14,63 @@ namespace ProductAPI.Services
             _context = context;
         }
 
-        public async Task<Inventory> AddToInventoryAsync(int productId, int quantity)
+        public async Task<bool> AddToInventoryAsync(IEnumerable<OrderItemResponse> items)
         {
-            var existsInventory = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == productId);
-            if (existsInventory == null)
-            {
-                throw new InvalidOperationException("Inventory does not exist");
-            }
-
-            existsInventory.Quantity += quantity;
-            _context.Inventories.Update(existsInventory);
-            await _context.SaveChangesAsync();
-            return existsInventory;
-        }
-
-        public async Task<Inventory> UpdateInventoryAsync(int productId, int quantity)
-        {
-            Console.WriteLine($"Trying to update inventory for ProductId {productId} with quantity {quantity}");
-
-
-            var existsInventory = await _context.Inventories.FirstOrDefaultAsync(x => x.ProductId == productId);
-            if (existsInventory == null)
-            {
-                throw new InvalidOperationException("Inventory not found!");
-            }
-            Console.WriteLine($"Current Inventory for ProductId {productId}: {existsInventory.Quantity}");
-
-
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                if (existsInventory.Quantity < quantity)
+                foreach (var item in items)
                 {
-                    throw new InvalidOperationException("Not enough inventory to fulfill the order.");
+                    var inventory = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
+
+
+                    inventory.Quantity += item.Quantity;
+                    _context.Inventories.Update(inventory);
                 }
 
-                existsInventory.Quantity -= quantity;
-                if (existsInventory.Quantity < 0)
-                {
-                    throw new InvalidOperationException("Inventory cannot go negative.");
-                }
-
-                _context.Inventories.Update(existsInventory);
-
-                try
-                {
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    throw new InvalidOperationException("The inventory was updated by another process. Please try again.");
-                }
-
-                Console.WriteLine($"Updated Inventory for ProductId {productId}: {existsInventory.Quantity}");
-
-
+                await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
-                return existsInventory;
+                return true;
+
             }
             catch
             {
                 await transaction.RollbackAsync();
-                throw;
+                return false;
+            }
+
+
+        }
+
+        public async Task<bool> UpdateInventoryWithTransactionAsync(IEnumerable<OrderItemResponse> items)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                foreach (var item in items)
+                {
+                    var inventory = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
+                    if (inventory == null || inventory.Quantity < item.Quantity)
+                    {
+                        await transaction.RollbackAsync();
+                        return false;
+
+                    }
+
+                    inventory.Quantity -= item.Quantity;
+                    _context.Inventories.Update(inventory);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                return false;
             }
 
 

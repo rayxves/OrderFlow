@@ -15,6 +15,7 @@ public class ProductConsumerHostedService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var consumerService = scope.ServiceProvider.GetRequiredService<ProductConsumerService>();
 
+        await consumerService.InitializeAsync();
         await consumerService.StartConsumingAsync();
     }
 }

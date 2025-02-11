@@ -55,7 +55,7 @@ namespace OrderAPI.Controllers
                     else if (session.PaymentStatus == "unpaid" || session.PaymentStatus == "requires_payment_method")
                     {
                         var paymentFail = await _paymentsService.GetPaymentData(session.Id);
-                        await _paymentsService.onPaymentFailure(paymentFail.User, paymentFail.Order);
+                        await _paymentsService.onPaymentFailure(paymentFail.User, paymentFail.Order, "Pagamento recusado.");
                         return BadRequest("Pagamento falhou ou cartão recusado.");
                     }
                     else if (session.PaymentStatus == "requires_action")
@@ -73,7 +73,7 @@ namespace OrderAPI.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao processar o pagamento: {ex.Message}");
-                return StatusCode(500, "Erro interno ao processar o pagamento.");
+                return StatusCode(500, "Erro interno ao processar o pagamento, tentaremos entrar em contato para comunicar o erro.");
             }
         }
 
