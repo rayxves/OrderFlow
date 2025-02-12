@@ -20,7 +20,7 @@ namespace OrderAPI.Services
         private readonly EmailService _emailService;
         private readonly RabbitMqService _rabbitMqService;
         private readonly IProductService _productService;
-        private Task emailServiceTask;
+   
 
         public PaymentService(ApplicationDBContext context, StripeService stripe, EmailService emailService, RabbitMqService rabbitMq, IConfiguration config, IProductService productService)
         {
@@ -118,7 +118,7 @@ namespace OrderAPI.Services
             Console.WriteLine("processando erro");
             var subject = _config["EmailSettings:EmailFrom"];
             var toEmail = user.Email;
-            var paymentStatus = "Cancelled";
+            var paymentStatus = "Canceled";
             var deliveryStatus = "";
 
             var deliveryDate = order.Delivery.DeliveryDate;
@@ -134,11 +134,11 @@ namespace OrderAPI.Services
 
             await _emailService.SendEmailAsync(toEmail, subject, body);
 
-            order.Status = "Payment Cancelled";
+            order.Status = "Payment Canceled";
             var delivery = order.Delivery;
-            delivery.Status = "Cancelled";
+            delivery.Status = "Canceled";
             var payment = order.Payment;
-            payment.PaymentStatus = "Cancelled";
+            payment.PaymentStatus = "Canceled";
             await _context.SaveChangesAsync();
         }
 

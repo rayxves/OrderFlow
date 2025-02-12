@@ -4,6 +4,7 @@ using ProductAPI.Models;
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 
 namespace ProductAPI.Services
 {
@@ -76,6 +77,21 @@ namespace ProductAPI.Services
                             _logger.LogInformation($"Added product and inventory: {product.Title}");
                         }
                     }
+                    var maxProductId = await _context.Products.MaxAsync(p => (int?)p.Id) ?? 0;
+                    var maxRatingId = await _context.Ratings.MaxAsync(r => (int?)r.Id) ?? 0;
+                    var maxInventoryId = await _context.Inventories.MaxAsync(i => (int?)i.Id) ?? 0;
+
+                    await _context.Database.ExecuteSqlRawAsync(
+                       "SELECT setval('\"Products_Id_seq\"', {0})", maxProductId + 1);
+
+                    await _context.Database.ExecuteSqlRawAsync(
+                        "SELECT setval('\"Ratings_Id_seq\"', {0})", maxRatingId + 1);
+
+                    await _context.Database.ExecuteSqlRawAsync(
+                        "SELECT setval('\"Inventories_Id_seq\"', {0})", maxInventoryId + 1);
+
+                    _logger.LogInformation("Auto-increment sequences updated.");
+
                 }
                 else
                 {

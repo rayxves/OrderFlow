@@ -12,8 +12,8 @@ namespace OrderAPI.Models
         public int OrderId { get; set; }
         public Order Order { get; set; }
 
-        public string PaymentUrl { get; set; }
-        public string StripeSessionId { get; set; }
+        public string PaymentUrl { get; set; } = string.Empty;
+        public string StripeSessionId { get; set; } = string.Empty;
 
         public string PaymentStatus { get; set; } = "Pending";
         public DateTime PaymentDate { get; set; }

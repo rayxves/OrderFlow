@@ -20,9 +20,12 @@ namespace OrderAPI.Services
             Console.WriteLine(_apiKey);
          
             string url = $"https://maps.googleapis.com/maps/api/distancematrix/json?origins={origem}&destinations={destino}&key={_apiKey}";
-            Console.WriteLine(url);
+       
             var response = await _httpClient.GetStringAsync(url);
-            Console.WriteLine(response);
+            if (response == null)
+            {
+                throw new HttpRequestException("Falha ao conectar com o Google Maps API");
+            }
 
             return JsonConvert.DeserializeObject<DeliveryTimeResponse>(response);
 
