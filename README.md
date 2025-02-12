@@ -49,7 +49,7 @@ Antes de rodar o projeto, você precisa ter as seguintes ferramentas:
 
 - Docker
 
-- Chave da API do Google
+- Chave da API do Google e Stripe
 
  
 
