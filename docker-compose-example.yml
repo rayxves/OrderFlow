@@ -1,0 +1,82 @@
+services:
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672" # AMQP
+      - "15672:15672" # Management Console
+    environment:
+      RABBITMQ_DEFAULT_USER: "user"
+      RABBITMQ_DEFAULT_PASS: "password"
+    networks:
+      - app_network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  products-api:
+    build:
+      context: ./
+      dockerfile: ./ProductAPI/Dockerfile
+    container_name: product-api
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_URL=amqp://user:password@rabbitmq:5672
+    ports:
+      - "127.0.0.1:5001:80"
+    networks:
+      - app_network
+
+  product-api-postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-productAPI-postgres}
+      PGDATA: /data/postgres
+    volumes:
+      - product-api-postgres:/data/postgres
+    ports:
+      - "127.0.0.1:5420:5432"
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  order-api-postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-orderAPI-postgres}
+      PGDATA: /data/postgres
+    volumes:
+      - order-api-postgres:/data/postgres
+    ports:
+      - "127.0.0.1:5421:5432"
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  orders-api:
+    build:
+      context: ./
+      dockerfile: ./OrderAPI/Dockerfile
+    container_name: order-api
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_URL=amqp://user:password@rabbitmq:5672
+    ports:
+      - "127.0.0.1:5002:80"
+    networks:
+      - app_network
+
+volumes:
+  rabbitmq_data:
+  product-api-postgres:
+  order-api-postgres:
+
+networks:
+  app_network:
+    driver: bridge
