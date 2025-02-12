@@ -7,7 +7,7 @@ namespace OrderAPI.Interfaces
         Task<OrderResponseDto> CreateOrderAsync(User user, OrderDto orderDto);
         Task<Order> GetOrderByIdAsync(int orderId);
         Task<List<Order>> GetAllOrdersByUserAsync(string userId);
-        Task<Order> UpdateOrderAsync(int orderId, OrderDto orderDto);
+        Task<OrderResponseDto> UpdateOrderAsync(int orderId, OrderDto orderDto);
         Task<Order> DeleteOrderAsync(int orderId);
         
     }

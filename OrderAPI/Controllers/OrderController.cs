@@ -68,7 +68,7 @@ namespace OrderAPI.Controllers
         {
             var order = await _orderService.UpdateOrderAsync(orderId, orderDto);
 
-            return Ok(order.ToNewOrderDto());
+            return Ok(order);
         }
 
     }
